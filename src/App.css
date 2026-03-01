@@ -158,12 +158,27 @@
 }
 
 .designer-credit {
-  margin: 1.4rem 0 0;
-  font-size: 0.7rem;
+  margin: clamp(2.8rem, 9.5vh, 6.2rem) 0 0;
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.66rem;
+  color: color-mix(in srgb, var(--tone-muted) 83%, white 17%);
+}
+
+.designer-credit-prefix {
+  font-family: var(--font-body);
+  font-size: clamp(0.63rem, 0.9vw, 0.74rem);
   font-weight: 500;
   letter-spacing: 0.24em;
   text-transform: uppercase;
-  color: color-mix(in srgb, var(--tone-muted) 83%, white 17%);
+}
+
+.designer-credit-name {
+  font-family: var(--font-tchamiltonarchive);
+  font-size: clamp(1.84rem, 3.92vw, 2.51rem);
+  line-height: 1;
+  letter-spacing: 0.015em;
 }
 
 @media (max-width: 900px) {
@@ -242,6 +257,10 @@
     font-size: clamp(1.85rem, 9.5vw, 3rem);
     line-height: 1.2;
   }
+
+  .designer-credit {
+    margin-top: clamp(2.2rem, 6.5vh, 4.2rem);
+  }
 }
 
 @media (max-width: 640px) {
@@ -278,5 +297,9 @@
   .final-section {
     padding-top: 9svh;
     padding-bottom: 11svh;
+  }
+
+  .designer-credit {
+    margin-top: clamp(1.9rem, 5.2vh, 3.2rem);
   }
 }

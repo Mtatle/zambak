@@ -1,9 +1,61 @@
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Manrope:wght@300;400;500;600&display=swap');
 
+@font-face {
+  font-family: 'BodoniFLF';
+  src: url('/models/fonts/BodoniFLF-Roman.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'BodoniFLF';
+  src: url('/models/fonts/BodoniFLF-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'PPTelegraf';
+  src: url('/models/fonts/pptelegraf-regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'PPTelegraf';
+  src: url('/models/fonts/pptelegraf-ultralight.otf') format('opentype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'PPTelegraf';
+  src: url('/models/fonts/pptelegraf-ultrabold.otf') format('opentype');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'TCHamiltonArchive';
+  src: url('/models/fonts/TchamiltonarcscriptRegular-yYXvm.otf')
+    format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --font-display:
     'Cormorant Garamond', 'Baskerville', 'Times New Roman', 'Georgia', serif;
   --font-body: 'Manrope', 'Avenir Next', 'Segoe UI', sans-serif;
+  --font-bodoni: 'BodoniFLF', 'Didot', 'Bodoni MT', 'Times New Roman', serif;
+  --font-pptelgraf: 'PPTelegraf', 'Avenir Next', 'Segoe UI', sans-serif;
+  --font-tchamiltonarchive: 'TCHamiltonArchive', 'Brush Script MT', cursive;
   --tone-bg-top: #f7f2ea;
   --tone-bg-bottom: #ece2d6;
   --tone-ink: #2a2119;

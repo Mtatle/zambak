@@ -215,7 +215,10 @@ function App() {
             <p className="closing-line">
               “A quiet object, composed through form, balance, and detail.”
             </p>
-            <p className="designer-credit">By Jusra Meneri</p>
+            <p className="designer-credit">
+              <span className="designer-credit-prefix">BY</span>
+              <span className="designer-credit-name">Jusra Meneri</span>
+            </p>
           </div>
         </section>
       </main>
