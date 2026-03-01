@@ -59,12 +59,12 @@ const fallbackDirections = [
 // Keys are part names from your model:
 // Circle002, Circle004, Line002, uje, lule_004, Line003
 const MANUAL_EXPLODED_PART_OFFSETS: Record<string, [number, number, number]> = {
-  Circle002: [-0.6, 0.05, 0.06],
+  Circle002: [-0.6, 0.05, 0.4],
   Circle004: [0.6, 0.2, 0.04],
   Line002: [0.34, -0.5, 0.8],
-  uje: [-0.2, -0.1, 0.2],
-  lule_004: [0.6, 0.2, -0.8],
-  Line003: [-0.5, -0.25, -0.5],
+  uje: [-0.1, -0.1, -0.6],
+  lule_004: [0.2, 0.2, -0.8],
+  Line003: [-0.5, -0.25, -0.2],
 }
 
 // Manual exploded rotation deltas in DEGREES [x, y, z].
