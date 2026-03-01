@@ -6,7 +6,6 @@ import {
   useState,
   type MutableRefObject,
 } from 'react'
-import * as THREE from 'three'
 import { FountainModel } from './FountainModel'
 
 type SceneCanvasProps = {
@@ -35,25 +34,22 @@ export function SceneCanvas({
   const controlsTarget = isMobile ? [0.46, -1.04, 0] : [0, -0.62, 0]
   const shadowScale = isMobile ? 10.4 : 14
   const shadowY = isMobile ? -2.06 : -1.58
+  const dprRange: [number, number] = isMobile ? [1, 1.25] : [1, 1.6]
+  const antialias = !isMobile
 
   return (
     <div className="scene-shell" aria-hidden="true">
       <Canvas
-        dpr={[1, 1.75]}
-        shadows={{ type: THREE.PCFShadowMap }}
+        dpr={dprRange}
         camera={{ position: cameraPosition as [number, number, number], fov: isMobile ? 34 : 31 }}
-        gl={{ antialias: true, alpha: true }}
+        gl={{ antialias, alpha: true, powerPreference: 'high-performance' }}
       >
         <ambientLight intensity={0.68} color="#f4ede4" />
 
         <directionalLight
-          castShadow
           intensity={1.1}
           color="#fff6ec"
           position={[4.5, 6, 4]}
-          shadow-mapSize-width={1024}
-          shadow-mapSize-height={1024}
-          shadow-bias={-0.00008}
         />
 
         <directionalLight
@@ -72,6 +68,8 @@ export function SceneCanvas({
         </Suspense>
 
         <ContactShadows
+          frames={1}
+          resolution={256}
           opacity={0.16}
           scale={shadowScale}
           blur={1.8}

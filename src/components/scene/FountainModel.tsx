@@ -122,8 +122,8 @@ export function FountainModel({
         return
       }
 
-      mesh.castShadow = true
-      mesh.receiveShadow = true
+      mesh.castShadow = false
+      mesh.receiveShadow = false
     })
 
     return clone
@@ -444,8 +444,6 @@ export function FountainModel({
               ref={(node) => {
                 fallbackMeshRefs.current[index] = node
               }}
-              castShadow
-              receiveShadow
               rotation={part.rotation ?? [0, 0, 0]}
             >
               {part.kind === 'cylinder' && <cylinderGeometry args={part.args} />}
