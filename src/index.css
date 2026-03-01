@@ -1,0 +1,46 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Manrope:wght@300;400;500;600&display=swap');
+
+:root {
+  --font-display:
+    'Cormorant Garamond', 'Baskerville', 'Times New Roman', 'Georgia', serif;
+  --font-body: 'Manrope', 'Avenir Next', 'Segoe UI', sans-serif;
+  --tone-bg-top: #f7f2ea;
+  --tone-bg-bottom: #ece2d6;
+  --tone-ink: #2a2119;
+  --tone-muted: #685d52;
+  --tone-accent: #8f7358;
+  --tone-line: color-mix(in srgb, #745f49 24%, transparent 76%);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: var(--tone-ink);
+  background:
+    radial-gradient(
+      circle at 22% 20%,
+      color-mix(in srgb, white 66%, var(--tone-bg-top) 34%) 0%,
+      transparent 38%
+    ),
+    radial-gradient(
+      circle at 88% 10%,
+      color-mix(in srgb, #d5bfa8 38%, transparent 62%) 0%,
+      transparent 44%
+    ),
+    linear-gradient(180deg, var(--tone-bg-top) 0%, var(--tone-bg-bottom) 56%, #f3ebdf 100%);
+}
