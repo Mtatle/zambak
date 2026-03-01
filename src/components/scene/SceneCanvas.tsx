@@ -1,6 +1,11 @@
 import { ContactShadows, Environment, OrbitControls } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
-import { Suspense, type MutableRefObject } from 'react'
+import {
+  Suspense,
+  useEffect,
+  useState,
+  type MutableRefObject,
+} from 'react'
 import * as THREE from 'three'
 import { FountainModel } from './FountainModel'
 
@@ -13,12 +18,30 @@ export function SceneCanvas({
   assemblyProgressRef,
   finalPhaseRef,
 }: SceneCanvasProps) {
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 900px)')
+    const update = () => setIsMobile(mediaQuery.matches)
+    update()
+
+    mediaQuery.addEventListener('change', update)
+    return () => {
+      mediaQuery.removeEventListener('change', update)
+    }
+  }, [])
+
+  const cameraPosition = isMobile ? [0.5, 0.46, 8.2] : [0, 0.58, 6.7]
+  const controlsTarget = isMobile ? [0.46, -1.04, 0] : [0, -0.62, 0]
+  const shadowScale = isMobile ? 10.4 : 14
+  const shadowY = isMobile ? -2.06 : -1.58
+
   return (
     <div className="scene-shell" aria-hidden="true">
       <Canvas
         dpr={[1, 1.75]}
         shadows={{ type: THREE.PCFShadowMap }}
-        camera={{ position: [0, 1.25, 6.4], fov: 30 }}
+        camera={{ position: cameraPosition as [number, number, number], fov: isMobile ? 34 : 31 }}
         gl={{ antialias: true, alpha: true }}
       >
         <ambientLight intensity={0.68} color="#f4ede4" />
@@ -43,16 +66,17 @@ export function SceneCanvas({
           <FountainModel
             assemblyProgressRef={assemblyProgressRef}
             finalPhaseRef={finalPhaseRef}
+            isMobile={isMobile}
           />
           <Environment preset="sunset" />
         </Suspense>
 
         <ContactShadows
           opacity={0.16}
-          scale={14}
+          scale={shadowScale}
           blur={1.8}
           far={3.3}
-          position={[0, -1.33, 0]}
+          position={[0, shadowY, 0]}
           color="#8b7760"
         />
 
@@ -62,8 +86,7 @@ export function SceneCanvas({
           enableDamping
           dampingFactor={0.08}
           rotateSpeed={0.38}
-          minAzimuthAngle={-0.45}
-          maxAzimuthAngle={0.45}
+          target={controlsTarget as [number, number, number]}
           minPolarAngle={Math.PI / 2 - 0.16}
           maxPolarAngle={Math.PI / 2 + 0.16}
         />

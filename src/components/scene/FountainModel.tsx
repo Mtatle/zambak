@@ -2,15 +2,16 @@ import { useGLTF } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import { useEffect, useMemo, useRef, type MutableRefObject } from 'react'
 import * as THREE from 'three'
-import type { Group, Mesh } from 'three'
+import type { Group, Mesh, Object3D } from 'three'
 
 type FountainModelProps = {
   assemblyProgressRef: MutableRefObject<number>
   finalPhaseRef: MutableRefObject<number>
+  isMobile: boolean
 }
 
-type MeshPart = {
-  mesh: Mesh
+type AnimatedPart = {
+  object: Object3D
   assembled: THREE.Vector3
   exploded: THREE.Vector3
 }
@@ -51,9 +52,18 @@ const fallbackDirections = [
   new THREE.Vector3(-0.3, 0.3, 0.9),
 ].map((vector) => vector.normalize())
 
+const tmpPartCenterA = new THREE.Vector3()
+const tmpPartCenterB = new THREE.Vector3()
+
+function isRenderablePart(object: Object3D) {
+  const asMesh = object as Mesh
+  return asMesh.isMesh || object.children.length > 0
+}
+
 export function FountainModel({
   assemblyProgressRef,
   finalPhaseRef,
+  isMobile,
 }: FountainModelProps) {
   const { scene } = useGLTF('/models/zambak.glb')
   const modelGroupRef = useRef<Group>(null)
@@ -63,55 +73,101 @@ export function FountainModel({
 
   const modelRoot = useMemo(() => {
     const clone = scene.clone(true)
-    const box = new THREE.Box3().setFromObject(clone)
-    const center = box.getCenter(new THREE.Vector3())
-    const size = box.getSize(new THREE.Vector3())
+    const bounds = new THREE.Box3().setFromObject(clone)
+    const center = bounds.getCenter(new THREE.Vector3())
+    const size = bounds.getSize(new THREE.Vector3())
     const maxDimension = Math.max(size.x, size.y, size.z) || 1
 
-    clone.position.sub(center)
-    clone.scale.setScalar(2.6 / maxDimension)
+    // Keep XY centered and anchor the object to the "ground" so it feels
+    // physically placed, then apply a scale that suits the curated camera.
+    clone.position.x -= center.x
+    clone.position.z -= center.z
+    clone.position.y -= bounds.min.y
+    clone.scale.setScalar((isMobile ? 1.72 : 2.3) / maxDimension)
 
-    return clone
-  }, [scene])
-
-  const meshParts = useMemo(() => {
-    const parts: MeshPart[] = []
-    let meshIndex = 0
-
-    // Mesh names may vary by export. Traverse all visible meshes and build
-    // a best-effort exploded layout from each mesh's local position.
-    modelRoot.traverse((object) => {
+    clone.traverse((object) => {
       const mesh = object as Mesh
-      if (!mesh.isMesh || !mesh.visible) {
+      if (!mesh.isMesh) {
         return
       }
 
       mesh.castShadow = true
       mesh.receiveShadow = true
-
-      const assembled = mesh.position.clone()
-      const direction =
-        assembled.lengthSq() > 0.0001
-          ? assembled.clone().normalize()
-          : fallbackDirections[meshIndex % fallbackDirections.length].clone()
-
-      const stackLayer = (meshIndex % 5) - 2
-      const spread =
-        0.24 +
-        (meshIndex % 3) * 0.04 +
-        Math.floor(meshIndex / fallbackDirections.length) * 0.06
-
-      const exploded = assembled
-        .clone()
-        .add(direction.multiplyScalar(spread))
-        .add(new THREE.Vector3(0, stackLayer * 0.09, 0))
-
-      parts.push({ mesh, assembled, exploded })
-      meshIndex += 1
     })
 
-    return parts
-  }, [modelRoot])
+    return clone
+  }, [scene, isMobile])
+
+  const animatedParts = useMemo(() => {
+    const directParts = modelRoot.children.filter(
+      (object) => object.visible && isRenderablePart(object),
+    )
+
+    const meshParts: Object3D[] = []
+    if (directParts.length < 3) {
+      modelRoot.traverse((object) => {
+        const mesh = object as Mesh
+        if (mesh.isMesh && mesh.visible) {
+          meshParts.push(mesh)
+        }
+      })
+    }
+
+    const partObjects = directParts.length >= 3 ? directParts : meshParts
+    if (partObjects.length === 0) {
+      return [] as AnimatedPart[]
+    }
+
+    const rootBounds = new THREE.Box3().setFromObject(modelRoot)
+    const rootCenter = rootBounds.getCenter(new THREE.Vector3())
+
+    const sortedParts = [...partObjects].sort((partA, partB) => {
+      new THREE.Box3().setFromObject(partA).getCenter(tmpPartCenterA)
+      new THREE.Box3().setFromObject(partB).getCenter(tmpPartCenterB)
+      return tmpPartCenterA.y - tmpPartCenterB.y
+    })
+
+    return sortedParts.map((object, index) => {
+      const assembled = object.position.clone()
+      const partCenter = new THREE.Box3().setFromObject(object).getCenter(
+        new THREE.Vector3(),
+      )
+      const rawRadial = new THREE.Vector3(
+        partCenter.x - rootCenter.x,
+        0,
+        partCenter.z - rootCenter.z,
+      )
+      const radialLength = rawRadial.length()
+      const radialDirection = rawRadial.clone()
+
+      if (radialDirection.lengthSq() < 0.0001) {
+        radialDirection.copy(
+          fallbackDirections[index % fallbackDirections.length],
+        )
+      } else {
+        radialDirection.normalize()
+      }
+
+      const normalizedIndex =
+        sortedParts.length === 1 ? 0 : index / (sortedParts.length - 1) - 0.5
+      const outlierDamping = THREE.MathUtils.clamp(1 - radialLength * 0.8, 0.4, 1)
+      const spread = (0.72 + index * 0.14) * outlierDamping * (isMobile ? 0.72 : 1)
+      const radialOffset = new THREE.Vector3(
+        radialDirection.x * spread * 0.56,
+        0,
+        radialDirection.z * spread * 0.86,
+      )
+      const swirl = new THREE.Vector3(
+        Math.sin(index * 1.3) * 0.13,
+        normalizedIndex * (isMobile ? 0.3 : 0.35) - (isMobile ? 0.28 : 0.22),
+        Math.cos(index * 0.96) * 0.13,
+      )
+
+      const exploded = assembled.clone().add(radialOffset).add(swirl)
+
+      return { object, assembled, exploded }
+    })
+  }, [modelRoot, isMobile])
 
   const fallbackParts = useMemo<FallbackPart[]>(
     () => [
@@ -123,7 +179,7 @@ export function FountainModel({
         roughness: 0.62,
         metalness: 0.08,
         assembled: new THREE.Vector3(0, -1.02, 0),
-        exploded: new THREE.Vector3(0, -1.62, 0),
+        exploded: new THREE.Vector3(0, -2.25, 0),
       },
       {
         key: 'plinth',
@@ -133,7 +189,7 @@ export function FountainModel({
         roughness: 0.55,
         metalness: 0.06,
         assembled: new THREE.Vector3(0, -0.58, 0),
-        exploded: new THREE.Vector3(0.52, -0.2, 0.24),
+        exploded: new THREE.Vector3(1.12, 0.08, 0.58),
       },
       {
         key: 'ring',
@@ -144,7 +200,7 @@ export function FountainModel({
         metalness: 0.16,
         rotation: [Math.PI / 2, 0, 0],
         assembled: new THREE.Vector3(0, -0.34, 0),
-        exploded: new THREE.Vector3(-0.56, 0.12, -0.24),
+        exploded: new THREE.Vector3(-1.26, 0.38, -0.62),
       },
       {
         key: 'stem',
@@ -154,7 +210,7 @@ export function FountainModel({
         roughness: 0.45,
         metalness: 0.12,
         assembled: new THREE.Vector3(0, 0.24, 0),
-        exploded: new THREE.Vector3(0.28, 0.88, -0.52),
+        exploded: new THREE.Vector3(0.72, 1.42, -1.22),
       },
       {
         key: 'cup',
@@ -164,7 +220,7 @@ export function FountainModel({
         roughness: 0.4,
         metalness: 0.15,
         assembled: new THREE.Vector3(0, 0.92, 0),
-        exploded: new THREE.Vector3(-0.34, 1.4, 0.38),
+        exploded: new THREE.Vector3(-0.88, 2.02, 0.96),
       },
       {
         key: 'petal-ring',
@@ -175,7 +231,7 @@ export function FountainModel({
         metalness: 0.2,
         rotation: [Math.PI / 2, 0, 0],
         assembled: new THREE.Vector3(0, 1.16, 0),
-        exploded: new THREE.Vector3(-0.62, 1.5, 0.12),
+        exploded: new THREE.Vector3(-1.42, 2.46, 0.24),
       },
       {
         key: 'bud',
@@ -185,13 +241,13 @@ export function FountainModel({
         roughness: 0.3,
         metalness: 0.22,
         assembled: new THREE.Vector3(0, 1.34, 0),
-        exploded: new THREE.Vector3(0.66, 1.86, -0.08),
+        exploded: new THREE.Vector3(1.28, 2.98, -0.22),
       },
     ],
     [],
   )
 
-  const usesFallback = meshParts.length === 0
+  const usesFallback = animatedParts.length === 0
 
   useEffect(() => {
     if (!usesFallback) {
@@ -213,7 +269,7 @@ export function FountainModel({
     smoothedAssemblyRef.current = THREE.MathUtils.damp(
       smoothedAssemblyRef.current,
       assemblyProgressRef.current,
-      3.7,
+      2.3,
       delta,
     )
 
@@ -233,30 +289,35 @@ export function FountainModel({
         mesh.position.lerpVectors(part.exploded, part.assembled, assemblyMix)
       })
     } else {
-      meshParts.forEach((part) => {
-        part.mesh.position.lerpVectors(part.exploded, part.assembled, assemblyMix)
+      animatedParts.forEach((part) => {
+        part.object.position.lerpVectors(part.exploded, part.assembled, assemblyMix)
       })
     }
 
     const elapsed = state.clock.elapsedTime
-    const floatY = Math.sin(elapsed * 0.55) * 0.055 + Math.sin(elapsed * 0.2) * 0.02
+    const floatY = Math.sin(elapsed * 0.55) * 0.042 + Math.sin(elapsed * 0.2) * 0.014
     const finalPhase = THREE.MathUtils.clamp(finalPhaseRef.current, 0, 1)
 
-    spinOffsetRef.current += delta * (0.03 + finalPhase * 0.06)
+    spinOffsetRef.current += delta * (0.024 + finalPhase * 0.052)
 
-    const targetRotationY = spinOffsetRef.current + Math.sin(elapsed * 0.22) * 0.04
-    group.position.y = 0.08 + floatY
-    group.rotation.y = THREE.MathUtils.damp(group.rotation.y, targetRotationY, 2.5, delta)
+    const orientationOffset = isMobile ? 0.62 : 0
+    const targetRotationY =
+      orientationOffset + spinOffsetRef.current + Math.sin(elapsed * 0.2) * 0.03
+    const baseY = usesFallback ? (isMobile ? -0.42 : -0.34) : isMobile ? -1.96 : -1.5
+    const baseX = usesFallback ? (isMobile ? 0.24 : 0) : isMobile ? 0.46 : 0
+    group.position.y = baseY + floatY
+    group.position.x = THREE.MathUtils.damp(group.position.x, baseX, 3.8, delta)
+    group.rotation.y = THREE.MathUtils.damp(group.rotation.y, targetRotationY, 2.4, delta)
     group.rotation.x = THREE.MathUtils.damp(
       group.rotation.x,
-      -0.06 + Math.sin(elapsed * 0.35) * 0.014,
-      2.8,
+      -0.055 + Math.sin(elapsed * 0.34) * 0.012,
+      2.6,
       delta,
     )
   })
 
   return (
-    <group ref={modelGroupRef} position={[0, -0.78, 0]}>
+    <group ref={modelGroupRef}>
       {usesFallback ? (
         <group>
           {fallbackParts.map((part, index) => (

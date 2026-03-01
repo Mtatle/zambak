@@ -168,24 +168,115 @@
 
 @media (max-width: 900px) {
   .hero-section {
-    align-items: center;
-    padding-top: 20svh;
+    align-items: start;
+    padding: 14svh 1.4rem 9svh;
+  }
+
+  .hero-copy {
+    max-width: min(21rem, 78vw);
+    padding-right: 0.8rem;
   }
 
   .hero-title {
-    max-width: 12ch;
+    max-width: 9ch;
+    font-size: clamp(2.18rem, 12.2vw, 3.5rem);
+    line-height: 0.95;
+  }
+
+  .hero-subtitle {
+    max-width: 24ch;
+    font-size: clamp(0.94rem, 4.2vw, 1rem);
+    line-height: 1.62;
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--tone-bg-top) 92%, transparent 8%) 0%,
+      color-mix(in srgb, var(--tone-bg-top) 70%, transparent 30%) 72%,
+      transparent 100%
+    );
+    display: inline-block;
+    padding-right: 0.45rem;
+  }
+
+  .hero-scroll-label {
+    margin-top: 1.7rem;
+    font-size: 0.69rem;
+    letter-spacing: 0.17em;
+  }
+
+  .assembly-section {
+    align-items: end;
+    padding-bottom: 24svh;
+  }
+
+  .assembly-copy {
+    max-width: min(26rem, 92vw);
+  }
+
+  .assembly-title {
+    font-size: clamp(1.92rem, 9.4vw, 3rem);
+  }
+
+  .assembly-note {
+    font-size: 0.93rem;
+    line-height: 1.64;
   }
 
   .details-grid {
     grid-template-columns: 1fr;
+    gap: 1.1rem;
   }
 
   .detail-block {
     min-height: auto;
+    border-left: none;
+    border-top: 1px solid var(--tone-line);
+    padding: 0.95rem 0 0.3rem;
   }
 
   .final-section {
     align-items: center;
-    padding-bottom: 16svh;
+    padding: 12svh 1.1rem 13svh;
+  }
+
+  .closing-line {
+    font-size: clamp(1.85rem, 9.5vw, 3rem);
+    line-height: 1.2;
+  }
+}
+
+@media (max-width: 640px) {
+  .hero-section {
+    padding-top: 13svh;
+  }
+
+  .hero-copy {
+    max-width: min(18rem, 80vw);
+  }
+
+  .hero-title {
+    font-size: clamp(1.95rem, 12.7vw, 2.85rem);
+  }
+
+  .hero-subtitle {
+    margin-top: 1.1rem;
+    font-size: 0.91rem;
+    line-height: 1.6;
+  }
+
+  .assembly-section {
+    padding-bottom: 26svh;
+  }
+
+  .assembly-copy {
+    max-width: min(19rem, 84vw);
+  }
+
+  .details-section {
+    padding: 2.6rem 1.2rem 4rem;
+  }
+
+  .final-section {
+    padding-top: 9svh;
+    padding-bottom: 11svh;
   }
 }

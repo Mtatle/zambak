@@ -41,7 +41,7 @@ function App() {
       const finalState = { value: 0 }
 
       gsap.set(['.hero-copy', '.hero-scroll-label'], { autoAlpha: 0, y: 30 })
-      gsap.set('.assembly-copy', { autoAlpha: 1, y: 0 })
+      gsap.set('.assembly-copy', { autoAlpha: 0, y: 22 })
       gsap.set('.detail-block', { autoAlpha: 0, y: 32 })
       gsap.set(['.closing-line', '.designer-credit'], { autoAlpha: 0, y: 24 })
 
@@ -66,11 +66,11 @@ function App() {
         {
           autoAlpha: 1,
           y: 0,
-          duration: 0.95,
+          duration: 1,
           ease: 'power2.out',
           scrollTrigger: {
             trigger: assemblySectionRef.current,
-            start: 'top 78%',
+            start: 'top 82%',
           },
         },
       )
@@ -80,35 +80,35 @@ function App() {
           scrollTrigger: {
             trigger: assemblySectionRef.current,
             start: 'top top',
-            end: '+=320%',
+            end: '+=360%',
             pin: true,
-            scrub: 1.25,
+            scrub: 1.35,
             anticipatePin: 1,
           },
         })
         // Hold on the exploded object and foreground copy before assembly starts.
-        .to({}, { duration: 0.7 })
+        .to({}, { duration: 0.84 })
         .to(
           '.assembly-copy',
           {
             autoAlpha: 0,
             y: -28,
-            duration: 0.52,
+            duration: 0.58,
             ease: 'power2.out',
           },
-          0.62,
+          0.72,
         )
         .to(
           assemblyState,
           {
             value: 1,
-            duration: 2.75,
+            duration: 2.95,
             ease: 'none',
             onUpdate: () => {
               assemblyProgressRef.current = assemblyState.value
             },
           },
-          0.8,
+          0.9,
         )
 
       gsap.to('.detail-block', {
@@ -215,7 +215,7 @@ function App() {
             <p className="closing-line">
               “A quiet object, composed through form, balance, and detail.”
             </p>
-            <p className="designer-credit">Designer Credit / Your Name</p>
+            <p className="designer-credit">By Jusra Meneri</p>
           </div>
         </section>
       </main>
