@@ -65,13 +65,9 @@
   color: var(--tone-muted);
 }
 
-.hero-scroll-label {
-  margin: 2.3rem 0 0;
-  font-size: 0.73rem;
-  font-weight: 500;
-  letter-spacing: 0.19em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--tone-accent) 75%, white 25%);
+.hero-spacer {
+  margin: 0;
+  height: clamp(2.2rem, 5.1vh, 3.25rem);
 }
 
 .assembly-section {
@@ -111,14 +107,17 @@
   width: min(76rem, 100%);
   margin: 0 auto;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: clamp(1.2rem, 2.9vw, 2.8rem);
+  grid-template-columns: repeat(2, minmax(18rem, 27rem));
+  column-gap: clamp(1.4rem, 4vw, 4rem);
+  row-gap: clamp(1.2rem, 2.9vw, 2.8rem);
+  justify-content: center;
 }
 
 .detail-block {
   min-height: 9.6rem;
   border-left: 1px solid var(--tone-line);
   padding: 0.25rem 0 0.25rem 1.3rem;
+  text-align: left;
 }
 
 .detail-block h3 {
@@ -187,6 +186,10 @@
     padding: 14svh 1.4rem 9svh;
   }
 
+  .hero-spacer {
+    height: 0;
+  }
+
   .hero-copy {
     max-width: min(21rem, 78vw);
     padding-right: 0.8rem;
@@ -210,12 +213,6 @@
     );
     display: inline-block;
     padding-right: 0.45rem;
-  }
-
-  .hero-scroll-label {
-    margin-top: 1.7rem;
-    font-size: 0.69rem;
-    letter-spacing: 0.17em;
   }
 
   .assembly-section {

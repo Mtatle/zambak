@@ -40,7 +40,6 @@ function App() {
       const assemblyState = { value: 0 }
       const finalState = { value: 0 }
 
-      gsap.set(['.hero-copy', '.hero-scroll-label'], { autoAlpha: 0, y: 30 })
       gsap.set('.assembly-copy', { autoAlpha: 0, y: 22 })
       gsap.set('.detail-block', { autoAlpha: 0, y: 32 })
       gsap.set(['.closing-line', '.designer-credit'], { autoAlpha: 0, y: 24 })
@@ -49,14 +48,6 @@ function App() {
         autoAlpha: 1,
         y: 0,
         duration: 1.2,
-        ease: 'power2.out',
-      })
-
-      gsap.to('.hero-scroll-label', {
-        autoAlpha: 1,
-        y: 0,
-        duration: 1.1,
-        delay: 0.25,
         ease: 'power2.out',
       })
 
@@ -183,7 +174,7 @@ function App() {
               surface come into balance.
             </p>
           </div>
-          <p className="hero-scroll-label">Scroll to assemble the form</p>
+          <p className="hero-spacer" aria-hidden="true" />
         </section>
 
         <section ref={assemblySectionRef} className="assembly-section">
