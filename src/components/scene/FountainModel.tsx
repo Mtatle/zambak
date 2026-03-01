@@ -14,6 +14,8 @@ type AnimatedPart = {
   object: Object3D
   assembled: THREE.Vector3
   exploded: THREE.Vector3
+  assembledRotation: THREE.Euler
+  explodedRotation: THREE.Euler
 }
 
 type FallbackPartBase = {
@@ -51,6 +53,35 @@ const fallbackDirections = [
   new THREE.Vector3(0.25, 0.34, -0.8),
   new THREE.Vector3(-0.3, 0.3, 0.9),
 ].map((vector) => vector.normalize())
+
+// Manual exploded placement per top-level GLB part.
+// Edit these XYZ offsets to move parts exactly where you want.
+// Keys are part names from your model:
+// Circle002, Circle004, Line002, uje, lule_004, Line003
+const MANUAL_EXPLODED_PART_OFFSETS: Record<string, [number, number, number]> = {
+  Circle002: [-0.6, 0.05, 0.06],
+  Circle004: [0.6, 0.2, 0.04],
+  Line002: [0.34, -0.5, 0.8],
+  uje: [-0.2, -0.1, 0.2],
+  lule_004: [0.6, 0.2, -0.8],
+  Line003: [-0.5, -0.25, -0.5],
+}
+
+// Manual exploded rotation deltas in DEGREES [x, y, z].
+// Values are added on top of each part's original rotation.
+const MANUAL_EXPLODED_PART_ROTATION_DEGREES: Record<
+  string,
+  [number, number, number]
+> = {
+  Circle002: [-20, 10, -10],
+  Circle004: [10, -8, 15],
+  Line002: [15, 12, 0],
+  uje: [0, -18, 4],
+  lule_004: [5, 16, -3],
+  Line003: [18, -2, 2],
+}
+
+const deg = (value: number) => THREE.MathUtils.degToRad(value)
 
 const tmpPartCenterA = new THREE.Vector3()
 const tmpPartCenterB = new THREE.Vector3()
@@ -129,6 +160,45 @@ export function FountainModel({
 
     return sortedParts.map((object, index) => {
       const assembled = object.position.clone()
+      const assembledRotation = object.rotation.clone()
+      const manualOffset = MANUAL_EXPLODED_PART_OFFSETS[object.name]
+      const manualRotationDelta =
+        MANUAL_EXPLODED_PART_ROTATION_DEGREES[object.name]
+
+      const createExplodedRotation = (
+        deltaDeg: [number, number, number],
+        scale: number,
+      ) =>
+        new THREE.Euler(
+          assembledRotation.x + deg(deltaDeg[0] * scale),
+          assembledRotation.y + deg(deltaDeg[1] * scale),
+          assembledRotation.z + deg(deltaDeg[2] * scale),
+          assembledRotation.order,
+        )
+
+      if (manualOffset) {
+        const mobileScale = isMobile ? 0.82 : 1
+        const exploded = assembled.clone().add(
+          new THREE.Vector3(
+            manualOffset[0] * mobileScale,
+            manualOffset[1] * mobileScale,
+            manualOffset[2] * mobileScale,
+          ),
+        )
+
+        const explodedRotation = manualRotationDelta
+          ? createExplodedRotation(manualRotationDelta, mobileScale)
+          : assembledRotation.clone()
+
+        return {
+          object,
+          assembled,
+          exploded,
+          assembledRotation,
+          explodedRotation,
+        }
+      }
+
       const partCenter = new THREE.Box3().setFromObject(object).getCenter(
         new THREE.Vector3(),
       )
@@ -164,8 +234,23 @@ export function FountainModel({
       )
 
       const exploded = assembled.clone().add(radialOffset).add(swirl)
+      const autoRotationDelta: [number, number, number] = [
+        normalizedIndex * 3.2,
+        (index % 2 === 0 ? 1 : -1) * 7.5,
+        normalizedIndex * -2.6,
+      ]
+      const explodedRotation = createExplodedRotation(
+        autoRotationDelta,
+        isMobile ? 0.78 : 1,
+      )
 
-      return { object, assembled, exploded }
+      return {
+        object,
+        assembled,
+        exploded,
+        assembledRotation,
+        explodedRotation,
+      }
     })
   }, [modelRoot, isMobile])
 
@@ -291,6 +376,39 @@ export function FountainModel({
     } else {
       animatedParts.forEach((part) => {
         part.object.position.lerpVectors(part.exploded, part.assembled, assemblyMix)
+        const targetRotationX = THREE.MathUtils.lerp(
+          part.explodedRotation.x,
+          part.assembledRotation.x,
+          assemblyMix,
+        )
+        const targetRotationY = THREE.MathUtils.lerp(
+          part.explodedRotation.y,
+          part.assembledRotation.y,
+          assemblyMix,
+        )
+        const targetRotationZ = THREE.MathUtils.lerp(
+          part.explodedRotation.z,
+          part.assembledRotation.z,
+          assemblyMix,
+        )
+        part.object.rotation.x = THREE.MathUtils.damp(
+          part.object.rotation.x,
+          targetRotationX,
+          7,
+          delta,
+        )
+        part.object.rotation.y = THREE.MathUtils.damp(
+          part.object.rotation.y,
+          targetRotationY,
+          7,
+          delta,
+        )
+        part.object.rotation.z = THREE.MathUtils.damp(
+          part.object.rotation.z,
+          targetRotationZ,
+          7,
+          delta,
+        )
       })
     }
 
